@@ -21,6 +21,7 @@ Scrapes a single Substack post and returns its content as structured JSON.
 ```bash
 curl -X POST http://localhost:3000/v1/scrape/substack-post \
     -H "Content-Type: application/json" \
+    -H "Authorization: Bearer your_secure_string_here" \
     -d '{"url":"https://kristybanks.substack.com/p/how-practicing-took-these-educators"}'
 ```
 

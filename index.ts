@@ -3,6 +3,11 @@ import type { AnyNode } from "domhandler";
 import TurndownService from "turndown";
 
 const turndown = new TurndownService({ headingStyle: "atx" });
+const API_TOKEN = process.env.API_TOKEN;
+
+function isAuthorized(request: Request): boolean {
+  return request.headers.get("Authorization") === `Bearer ${API_TOKEN}`;
+}
 
 interface ScrapePayload {
   url: string;
@@ -131,6 +136,13 @@ export default {
   port: Number(process.env.PORT ?? "3000"),
   fetch(request: Request): Promise<Response> | Response {
     const url = new URL(request.url);
+
+    if (!isAuthorized(request)) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     if (request.method !== "POST" || url.pathname !== "/v1/scrape/substack-post") {
       return new Response(JSON.stringify({ error: "Not found" }), {
