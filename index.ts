@@ -132,7 +132,7 @@ export default {
   fetch(request: Request): Promise<Response> | Response {
     const url = new URL(request.url);
 
-    if (request.method !== "POST" || url.pathname !== "/api/v1/scrape/substack-post") {
+    if (request.method !== "POST" || url.pathname !== "/v1/scrape/substack-post") {
       return new Response(JSON.stringify({ error: "Not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
