@@ -9,24 +9,14 @@ interface ScrapePayload {
 }
 
 interface ScrapeResponse {
-  filename: string;
-  markdown_content: string;
+  url: string;
+  title: string;
+  subtitle: string;
+  author: string;
+  publish_date: string;
   hero_image_url: string;
-}
-
-function escapeForYaml(value: string): string {
-  return value.replace(/"/g, '\\"');
-}
-
-function sanitizeSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 50)
-    .replace(/-+$/, "");
+  body_html: string;
+  body_markdown: string;
 }
 
 function extractPublishDate($: cheerio.CheerioAPI): string {
@@ -125,23 +115,15 @@ async function scrape(url: string): Promise<ScrapeResponse> {
   const bodyHtml = extractBodyHtml($);
   const markdownBody = turndown.turndown(bodyHtml).trim();
 
-  const frontMatter = [
-    "---",
-    "layout: post",
-    `title: "${escapeForYaml(title)}"`,
-    `subtitle: "${escapeForYaml(subtitle)}"`,
-    `author: "${escapeForYaml(author)}"`,
-    "---",
-    "",
-  ].join("\n");
-
-  const slug = sanitizeSlug(title) || "untitled";
-  const filename = `${publishDate}-${slug}.md`;
-
   return {
-    filename,
-    markdown_content: frontMatter + markdownBody,
+    url,
+    title,
+    subtitle,
+    author,
+    publish_date: publishDate,
     hero_image_url: heroImageUrl,
+    body_html: bodyHtml,
+    body_markdown: markdownBody,
   };
 }
 
@@ -150,7 +132,7 @@ export default {
   fetch(request: Request): Promise<Response> | Response {
     const url = new URL(request.url);
 
-    if (request.method !== "POST" || url.pathname !== "/api/v1/substack-to-md") {
+    if (request.method !== "POST" || url.pathname !== "/api/v1/scrape/substack-post") {
       return new Response(JSON.stringify({ error: "Not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
