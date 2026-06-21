@@ -25,6 +25,22 @@ interface ScrapeResponse {
 }
 
 function extractPublishDate($: cheerio.CheerioAPI): string {
+  const structuredData = $('script[type="application/ld+json"]').first().html();
+  if (structuredData) {
+    try {
+      const parsed = JSON.parse(structuredData) as Record<string, unknown>;
+      const datePublished = parsed.datePublished as string | undefined;
+      if (datePublished) {
+        const parsedDate = new Date(datePublished);
+        if (!Number.isNaN(parsedDate.getTime())) {
+          return parsedDate.toISOString().slice(0, 10);
+        }
+      }
+    } catch {
+      // fall through to remaining selectors
+    }
+  }
+
   const selectors = [
     'meta[property="article:published_time"]',
     'meta[name="article:published_time"]',
